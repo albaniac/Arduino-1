@@ -152,10 +152,6 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
   }
-  pinMode(ONE_WIRE_BUS, OUTPUT);
-  analogWrite(ONE_WIRE_BUS, 800);
-  delay(3000);
-  analogWrite(ONE_WIRE_BUS, 0);
   sensors.begin();
   Serial.begin(9600);
   // set the resolution to 10 bit is 0.25 degree and 9 bit 0.5 degree.  
@@ -210,9 +206,9 @@ ArduinoOTA.begin();
 
 void loop() {
     ArduinoOTA.handle();
-     sensors.requestTemperatures();
-     inside_temp = sensors.getTempC(insideThermometer);
-     outside_temp = sensors.getTempC(testThermometer);
+//     sensors.requestTemperatures();
+//     inside_temp = sensors.getTempC(insideThermometer);
+//     outside_temp = sensors.getTempC(testThermometer);
     //refresh the temperature display as often as possible
     for (int i = 0; i < 8; i++){
       // take the latchPin low so 
@@ -223,7 +219,7 @@ void loop() {
       shiftOut(dataPinTemp,clockPinTemp, MSBFIRST,segment_pattern[output[i % 8]]);
       // take the latchPin high to light the display
       digitalWrite (latchPinTemp, HIGH);
-      //delay(2);
+      //delay(2000);
       //turn off the last digit so it is not over bright
       digitalWrite (latchPinTemp, LOW);
       shiftOut (dataPinTemp, clockPinTemp, MSBFIRST, digit_pattern[7]);
@@ -305,14 +301,14 @@ void timeDisplay () {
     ones_minute = mn % 10; 
     // take the latchPinTime low so 
     // the LEDs don't change while you're sending in bits:
-    digitalWrite(latchPinTime, HIGH);
+    digitalWrite(latchPinTime, LOW);
     //shift out the bits:
     shiftOut(dataPinTime,clockPinTime, MSBFIRST,segment_pattern[tens_hour]);    
     shiftOut(dataPinTime,clockPinTime, MSBFIRST,segment_pattern[ones_hour]);
     shiftOut(dataPinTime,clockPinTime, MSBFIRST,segment_pattern[tens_minute]);
     shiftOut(dataPinTime,clockPinTime, MSBFIRST,segment_pattern[ones_minute]);
     //take the latch pin high so the LEDs will light up:
-    digitalWrite(latchPinTime, LOW);
+    digitalWrite(latchPinTime, HIGH);
 }//end timeDisplay
 
 
