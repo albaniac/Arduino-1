@@ -3,13 +3,13 @@
 /* Pin assignments:
 
 5  Time bus
-6  Time bus
+1  Time bus
 7  Time bus
-8  One wire bus
-1  Temp bus
+6  One wire bus
+8  Temp bus
 2  Temp bus
-3  Temp bus
-0  Led Colon
+4  Temp bus
+3  Led Colon
 */
 
 #include <OneWire.h>
@@ -25,7 +25,7 @@
 const char *ssid = "workshop";
 const char *password = "workshop";
 uint8_t hr = 19;
-uint8_t mn = 54;
+uint8_t mn = 56;
 volatile uint8_t sec = 0;
 uint8_t oldhr = 0;
 
@@ -210,24 +210,25 @@ ArduinoOTA.begin();
 void loop() {
     ArduinoOTA.handle();
     //refresh the temperature display as often as possible
-    for (int i = 0; i < 8; i++){
+     for (int i = 0; i < 8; i++){
       // take the latchPin low so 
       // the LEDs don't change while you're sending in bits:
       digitalWrite(latchPinTemp, LOW);
       //shift out the byte patterns one digit at a time 1 to 8
       shiftOut(dataPinTemp,clockPinTemp, MSBFIRST,digit_pattern[(i % 8)]);
-      shiftOut(dataPinTemp,clockPinTemp, MSBFIRST,segment_pattern[output[i % 8]]);
+      shiftOut(dataPinTemp,clockPinTemp, MSBFIRST,segment_pattern[output[(i % 8)]]);
       // take the latchPin high to light the display
       digitalWrite (latchPinTemp, HIGH);
-      //delay(2);
+      delayMicroseconds(200);
       //turn off the last digit so it is not over bright
       digitalWrite (latchPinTemp, LOW);
       shiftOut (dataPinTemp, clockPinTemp, MSBFIRST, digit_pattern[7]);
       shiftOut (dataPinTemp, clockPinTemp, MSBFIRST, segment_pattern[22]);
       digitalWrite (latchPinTemp, HIGH);
+      delayMicroseconds(20);
     }//end of refreshing temperature display
 
-     updateTime(); // increment sec, mn and hr
+    updateTime(); // increment sec, mn and hr
     
     if (oldhr < hr) {//reset NTP time each hour
       dateTime = NTPuk.getNTPtime(0.0, 1);
@@ -241,12 +242,11 @@ void loop() {
     if (mn != minuteCounter){
        minuteCounter = mn;
        
-//update the temperatures
+       //update the temperatures
        sensors.requestTemperatures();
        inside_temp = sensors.getTempC(testThermometer);
        outside_temp = sensors.getTempC(testThermometer);
-       Serial.print("test thermometer: ");
-       Serial.println(inside_temp);
+
        if ( inside_temp > 99.9 ) {
           inside_temp = 99.9;  
         }
@@ -285,37 +285,19 @@ void loop() {
         // the last digit is always a "C"
         output [3] = 20;
         output [7] = 20;
+        for (int digit=0; digit < 8; digit++){
+          Serial.print(output[digit]);
+          Serial.print("  ");
+        }
+        Serial.print (inside_temp);
+        Serial.println("");
 
-       //update the time display
+        //update the time display
         timeDisplay(); 
     }// end of dealing with a new minute
-    //separate the two digits of the hour
-    tens_hour = int (hr/10);
-    ones_hour = hr % 10;
-    //separate the two digits of the minute
-    tens_minute = int (mn/10);
-    ones_minute = mn % 10; 
-    // take the latchPinTime low so 
-    // the LEDs don't change while you're sending in bits:
-    Serial.println("Start of display update");
-    digitalWrite(latchPinTime, LOW);
-//    delay(2);
-    //shift out the bits:
-    shiftOut(dataPinTime,clockPinTime, MSBFIRST,segment_pattern[tens_hour]);    
-//    delay(1);
-    shiftOut(dataPinTime,clockPinTime, MSBFIRST,segment_pattern[ones_hour]);
-//    delay(1);
-    shiftOut(dataPinTime,clockPinTime, MSBFIRST,segment_pattern[tens_minute]);
-//    delay(1);
-    shiftOut(dataPinTime,clockPinTime, MSBFIRST,segment_pattern[ones_minute]);
-//    delay(1);
-    //take the latch pin high so the LEDs will light up:
-    digitalWrite(latchPinTime, HIGH);
-    Serial.println("End of loop");
-    delay(5000);
-
+    
+ 
 }//end loop
-
 
 void timeDisplay () {
     //separate the two digits of the hour
